@@ -1,6 +1,18 @@
 from pydantic import BaseModel, EmailStr
-from typing import List
+from typing import List, Optional
+from sqlalchemy import Column, Integer, String
+from app.database import Base
 
+# SQLAlchemy model
+class UserModel(Base):
+    """SQLAlchemy model for users table"""
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(255), nullable=False)
+    email = Column(String(255), unique=True, nullable=False, index=True)
+
+# Pydantic models for API
 class UserBase(BaseModel):
     """Base model for user data"""
     name: str

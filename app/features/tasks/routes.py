@@ -1,55 +1,34 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+from sqlalchemy.orm import Session
 from .models import Task, TaskCreate, TaskList
-from datetime import datetime
+from . import repository
+from app.database import get_db
 
 router = APIRouter(prefix="/api", tags=["tasks"])
 
-# Mock database (in a real application, this would be in a separate data layer)
-tasks = [
-    {
-        "id": 1,
-        "title": "Complete project",
-        "description": "Finish the API implementation",
-        "status": "in_progress",
-        "created_at": datetime.fromisoformat("2024-03-09T10:00:00+00:00")
-    }
-]
-
 @router.get("/tasks", response_model=TaskList)
-async def get_tasks():
+async def get_tasks(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     """Get all tasks"""
+    tasks = repository.get_tasks(db, skip=skip, limit=limit)
     return {"tasks": tasks, "total": len(tasks)}
 
 @router.post("/tasks", response_model=Task, status_code=201)
-async def create_task(task: TaskCreate):
+async def create_task(task: TaskCreate, user_id: int = None, db: Session = Depends(get_db)):
     """Create a new task"""
-    new_task = {
-        "id": max(task["id"] for task in tasks) + 1,
-        **task.model_dump(),
-        "created_at": datetime.utcnow()
-    }
-    tasks.append(new_task)
-    return new_task
+    return repository.create_task(db, task, user_id)
 
 @router.get("/tasks/{task_id}", response_model=Task)
-async def get_task(task_id: int):
+async def get_task(task_id: int, db: Session = Depends(get_db)):
     """Get a specific task by ID"""
-    if task := next((task for task in tasks if task["id"] == task_id), None):
-        return task
-    raise HTTPException(status_code=404, detail="Task not found")
+    return repository.get_task_by_id(db, task_id)
 
 @router.put("/tasks/{task_id}", response_model=Task)
-async def update_task(task_id: int, task_update: TaskCreate):
+async def update_task(task_id: int, task_update: TaskCreate, db: Session = Depends(get_db)):
     """Update a task"""
-    if task := next((task for task in tasks if task["id"] == task_id), None):
-        task.update(task_update.model_dump())
-        return task
-    raise HTTPException(status_code=404, detail="Task not found")
+    return repository.update_task(db, task_id, task_update)
 
 @router.delete("/tasks/{task_id}", status_code=204)
-async def delete_task(task_id: int):
+async def delete_task(task_id: int, db: Session = Depends(get_db)):
     """Delete a task"""
-    if task := next((task for task in tasks if task["id"] == task_id), None):
-        tasks.remove(task)
-        return
-    raise HTTPException(status_code=404, detail="Task not found") 
+    repository.delete_task(db, task_id)
+    return None 

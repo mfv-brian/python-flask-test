@@ -2,6 +2,13 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.features.users.routes import router as users_router
 from app.features.tasks.routes import router as tasks_router
+from app.database import engine
+from app.features.users.models import UserModel
+from app.features.tasks.models import TaskModel
+
+# Create database tables
+UserModel.metadata.create_all(bind=engine)
+TaskModel.metadata.create_all(bind=engine)
 
 def create_app() -> FastAPI:
     """Create and configure the FastAPI application"""
