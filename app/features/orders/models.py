@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 from typing import List, Optional
 from datetime import datetime
 from enum import Enum
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Enum as SQLAlchemyEnum
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Enum as SQLAlchemyEnum, Numeric
 from sqlalchemy.orm import relationship
 from app.database import Base
 
@@ -21,7 +21,7 @@ class OrderModel(Base):
     id = Column(Integer, primary_key=True, index=True)
     item_name = Column(String(255), nullable=False)
     quantity = Column(Integer, nullable=False)
-    price = Column(Float(precision=10, scale=2), nullable=False)
+    price = Column(Numeric(precision=10, scale=2), nullable=False)
     status = Column(SQLAlchemyEnum(OrderStatus), default=OrderStatus.PENDING)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
